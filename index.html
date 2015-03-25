@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>search your fiddles!</title>
+
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" rel="stylesheet"/>
+	<link href="http://fonts.googleapis.com/css?family=Reenie+Beanie:regular" rel="stylesheet" type="text/css"/>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans+Condensed:300' rel='stylesheet' type='text/css'/>
+    <link href="content/fiddle-search-core.css" rel="stylesheet"/>
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.3.14/angular.min.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.3.14/angular-animate.min.js"></script>	
+	<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.11.0/ui-bootstrap-tpls.js"></script>
+	<script type="text/javascript" src="content/fiddle-search-core.js"></script>
+</head>
+
+<body ng-cloak ng-app="fiddleSearch" ng-controller="fiddleSearchController">
+    <!-- Full Width Image Header -->
+    <div ng-hide="showHeader" class="small-header">
+		&lsaquo; <a class="home-link" href="index.html">jsfddle.search</a> &rsaquo;
+	</div>
+	<header class="header-image" ng-show="showHeader">
+        <div class="headline">
+			<div class="container-fluid">
+				<div class="row">
+					<div class="col-md-6">
+						<h3>&lsaquo; <a class="home-link" href="index.html">jsfiddle.search</a> &rsaquo;</h3>
+					</div>
+					<div class="col-md-6"></div>
+				</div>
+				<br/><br/>
+				<div class="row">
+					<div class="col-md-6"></div>
+					<div class="col-md-6">
+						<h3 class="short-intro">Do you love jsfiddle?</h3>
+						<h3 class="short-intro">...and miss the ability to search?</h3>
+						<h3 class="short-intro">Don't! Anymore!!</h3>
+					</div>
+				</div>
+			</div>
+        </div>
+    </header>
+
+	<div ng-hide="showHeader">
+		<br/><br/><br/>
+	</div>
+	<br/>
+
+    <!-- Page Content -->
+    <div class="container">
+		<div class="row">
+			<div class="col-md-10">
+				<input type="text" class="form-control col-md-12" placeholder="Enter search text (min 3 chars)" ng-disabled="gettingStarted" ng-model="searchText" />		
+			</div>
+			<div class="col-md-2">
+				<a data-toggle="modal" data-target="#myModal"><span class="header-btn glyphicon glyphicon-pencil" aria-hidden="true"></span></a>
+				<a href="javascript:void(0)" ng-click="showHeader = !showHeader"><span class="header-btn glyphicon glyphicon-cog" title="fetch fiddles for a different user" aria-hidden="true"></span></a>
+			</div>
+		</div>
+		<br/>
+
+		<div ng-repeat="fiddle in filteredUserFiddles track by $index">
+			<div class="fiddle">
+					 <div class="row">
+						<div class="col-md-10">
+							<span class="label label-success">v{{ fiddle.latest_version }}</span>
+							&nbsp;
+							<span class="title"><a href="{{ fiddle.url }}" target="_blank">{{ fiddle.title }}</a></span>
+						</div>
+						<div class="col-md-2 framework">
+							<span class="label label-primary pull-right">{{ fiddle.framework }}</span>
+						</div>
+					</div>    
+				<br/>
+				<p class="description">{{ fiddle.description }}</p>
+				<br/>
+				<div>
+				    <div class="btn-group" ng-hide="getDisplayStatus(fiddle.version)">
+					  <button type="button" class="btn btn-warning btn-sm dropdown-toggle" data-toggle="dropdown" aria-expanded="false">Other Versions <span class="caret"></span></button>
+					  <ul class="dropdown-menu" role="menu">
+						<li ng-repeat="version in getVersions(fiddle.version)">
+							<a href="{{fiddle.url}}{{version}}" target="_blank">v{{version}}</a>
+						</li>
+					  </ul>
+					</div>
+				    <div class="btn-group" ng-hide="!getDisplayStatus(fiddle.version)">
+					  <button type="button" class="btn btn-inverse btn-sm dropdown-toggle" data-toggle="dropdown" aria-expanded="false">None&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="caret"></span></button>
+					</div>
+					<div class="pull-right"> 
+						<span class="badge">Created {{ fiddle.created }}</span>        
+					</div>
+				 </div>
+			</div>
+			<div ng-if="!$last">
+				<br/>
+			</div>
+		</div>
+
+		<div ng-if="loadingFiddles">
+			<img src="content/loading.gif" alt="loading..." /> <strong>loading...</strong>
+		</div>
+
+		<div ng-if="!gettingStarted && !loadingFiddles && filteredUserFiddles.length == 0">
+			<div class="alert alert-warning">
+				<strong>No items matched the search string, sorry!</strong>
+			</div>
+		</div>
+
+		<br/>
+
+		<div ng-hide="gettingStarted" style="text-align: center">
+			<pagination total-items="totalItems" items-per-page="numPerPage" ng-model="currentPage" boundary-links="true" max-size="maxSize" previous-text="&lsaquo;" next-text="&rsaquo;" first-text="&laquo;" last-text="&raquo;" ng-change="pageChanged()"></pagination>
+		</div>
+
+		<!-- https://www.iconfinder.com/icons/313114/js_jsfiddle_icon#size=256 -->
+		<div ng-show="gettingStarted">
+			<div class="featurette" id="about">
+				<img class="featurette-image img-circle img-responsive pull-right" src="content/jsfiddle.png">
+				<h2 class="featurette-heading">Getting Started</h2>
+				<p class="lead">
+					I love jsfiddle the most among all other sites that offers the same functionality. But one thing I miss is the ability to search! That's why I came up with this! To get started, click on the <span class="header-btn-sm glyphicon glyphicon-pencil" aria-hidden="true"></span> icon, enter your user name and press the Save button. You will start seeing your fiddles & use the search text box to filter your fiddles! That's it!! Also, to hide the header image click on the <span class="header-btn-sm glyphicon glyphicon-cog" aria-hidden="true"></span> icon. Have fun :)
+				</p>
+			</div>
+
+			<hr class="featurette-divider">
+		</div>
+
+        <!-- Footer -->
+        <footer>
+            <div class="row">
+                <div class="col-lg-12" style="text-align: center">
+                    <p>Copyright &copy; <a href="https://github.com/karthik25/fiddle-search/blob/master/License.txt">Karthik Anant</a> 2015 |
+					<a data-toggle="modal" data-target="#creditsModal" href="javascript:void(0)">Credits</a></p>
+                </div>
+            </div>
+        </footer>
+
+    </div>
+    <!-- /.container -->
+
+	<!-- Options -->
+	<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	  <div class="modal-dialog">
+		<div class="modal-content">
+		  <div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+			<h4 class="modal-title" id="myModalLabel">Options</h4>
+		  </div>
+		  <div class="modal-body">
+			<input type="text" placeholder="enter jsfiddle username" class="form-control"
+				   ng-model="userName" />
+			<br/>
+			<div>
+				<div class="pull-left">
+					<label for="chkDefault">
+						<input type="checkbox" id="chkDefault" ng-model="setDefault" /> <span>Set As Default</span>
+					</label>
+				</div>
+				<div class="pull-right">
+					<label for="chkClear">
+						<input type="checkbox" id="chkClear" ng-model="refresh" /> <span>Clear From Local Cache</span>
+					</label>
+				</div>
+				<br/>
+			</div>
+		  </div>
+		  <div class="modal-footer">
+			<button type="button" class="btn btn-default" data-dismiss="modal"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> Close</button>
+			<button type="button" class="btn btn-primary" ng-click="updateResultsInternal()" data-dismiss="modal"><span class="glyphicon glyphicon-save" aria-hidden="true"></span> Save</button>
+		  </div>
+		</div>
+	  </div>
+	</div>
+
+	<!-- Credits -->
+	<div class="modal fade" id="creditsModal" tabindex="-1" role="dialog" aria-labelledby="creditsModalLabel" aria-hidden="true">
+	  <div class="modal-dialog">
+		<div class="modal-content">
+		  <div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+			<h4 class="modal-title" id="creditsModalLabel">Credits</h4>
+		  </div>
+		  <div class="modal-body">
+			Needless to say, first credits to <a href="http://jsfiddle.net/" target="_blank">jsfiddle</a> for the inspiration! Design based partly on <strong>One Page Wonder</strong> from <a href="www.bootstrapstage.com/one-page-wonder/" target="_blank">bootstrap stage</a>. Also, thanks to...
+			<br/><br/>
+			<div class="list-group">
+			  <a href="https://angularjs.org/" class="list-group-item" target="_blank">Angular JS</a>
+			  <a href="https://angular-ui.github.io/bootstrap/" class="list-group-item" target="_blank">Angular UI/Bootstrap</a>
+			  <a href="http://getbootstrap.com/" class="list-group-item" target="_blank">Bootstrap</a>
+			  <a href="http://unsplash.com" class="list-group-item" target="_blank">Unsplash (header images)</a>
+			  <div ng-show="moreCredits">
+				  <a href="http://cdnjs.com" class="list-group-item" target="_blank">CDN JS</a>
+				  <a href="http://www.bootstrapcdn.com/" class="list-group-item" target="_blank">Max CDN</a>
+				  <a href="http://www.google.com/fonts" class="list-group-item" target="_blank">Google Fonts - Beenie Regular & Open Sans Condensed</a>
+				  <a href="https://jquery.com/" class="list-group-item" target="_blank">jQuery</a>
+			  </div>
+			</div>
+			<div class="pull-right" ng-show="!moreCredits">
+				<a href="javascript:void(0)" ng-click="moreCredits = !moreCredits">More...</a>
+			</div>
+			<br/>
+		  </div>
+		</div>
+	  </div>
+	</div>
+
+    <script src="https://code.jquery.com/jquery-1.11.2.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+</body>
+
+</html>
