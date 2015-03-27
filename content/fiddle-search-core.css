@@ -388,6 +388,10 @@ footer {
 	font-family: 'Open Sans Condensed', arial, sans-serif;
 }
 
-.real {
+.real-red {
 	color: red
+}
+
+.real-green {
+	color: #01DF01
 }
